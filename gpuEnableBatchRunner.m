@@ -3,12 +3,9 @@ longTermTracker1=0;
 timeStamp=1;
 cellPerTime1=zeros(1,1,'double');
 cellPerTimeCRAC=zeros(1,1,'double');
-%myFolder='/home/exx/Desktop/Data from Milton/14-04-17/60x RFP-V5-GCamp6f_16.oif.files';
-%RunInfo='14-04-17/60x RFP-V5-GCamp6f_16.oif.files/';
-RunInfo='60x RedGCamp6f_01.oif.files';
-myFolder='/Users/codyarbuckle/Desktop/Data From Milton/60x RedGCamp6f_01.oif.files';
-%mkdir('/home/exx/Desktop/Processed Images Comp/','14-04-17/60x RFP-V5-GCamp6f_16.oif.files');
-WriteString='/Users/codyarbuckle/Desktop/Processed Images';
+myFolder='/home/exx/Desktop/Data from Milton/14-04-17/60x RFP-V5-GCamp6f_16.oif.files';
+RunInfo='14-04-17/60x RFP-V5-GCamp6f_16.oif.files/';
+mkdir('/home/exx/Desktop/Processed Images GPU/','14-04-17/60x RFP-V5-GCamp6f_16.oif.files');
 if ~isdir(myFolder)
   errorMessage = sprintf('Error: The following folder does not exist:\n%s', myFolder);
   uiwait(warndlg(errorMessage));
@@ -23,48 +20,51 @@ filePattern = fullfile(myFolder, 's_C003*.tif');
 jpegFiles = dir(filePattern);
 
 
-for l = 1:1% length(jpegFiles)
+for l = 1: length(jpegFiles)
   %get images from phase 2
   baseFileNameCRAC = jpegFilesCRAC(l).name;
   fullFileNameCRAC = fullfile(myFolder, baseFileNameCRAC);
   fprintf(1, 'Now reading %s\n', fullFileNameCRAC);
-  imageArrayCRAC = imread(fullFileNameCRAC);
-
+  imageArrayPRECRAC = imread(fullFileNameCRAC);
+  imageArrayCRAC=gpuArray(imageArrayPRECRAC); 
     
   % get images from phase 3   
   baseFileName = jpegFiles(l).name;
   fullFileName = fullfile(myFolder, baseFileName);
   fprintf(1, 'Now reading %s\n', fullFileName);
-  imageArray = imread(fullFileName);
+  imagePREArray = imread(fullFileName);
+  imageArray=gpuArray(imagePREArray);
   
   %enhance images from phase 2 
   helperCRAC=int2str(l);
   imageletterCRAC=strcat('EnhancedImagePhase2 - ',helperCRAC);
- [NewTestCRAC, centerholderCRAC, NewBWCRAC]=individualPhotoChecker(imageArrayCRAC);
+ [NewTestCRAC, centerholderCRAC, NewBWCRAC]=individualPhotoCheckerGPU(imageArrayCRAC);
  holderCRAC=size(centerholderCRAC,1);
  cellPerTimeCRAC(timeStamp)=holderCRAC;
- ProcessedImageBaseFolderPath=WriteString;
+ ProcessedImageBaseFolderPath='/home/exx/Desktop/Processed Images/';
  ProcessedImageFolderPath=strcat(ProcessedImageBaseFolderPath,RunInfo);
  WriteCracImages=strcat(ProcessedImageFolderPath,imageletterCRAC);
  WritePathCRAC=strcat(WriteCracImages,'.tiff');
  %enhacne phase 3 images
   helperPhase3=int2str(l);
   imageletterPhase3=strcat('EnhancedImagePhase3 - ',helperPhase3);
- [NewTest, centerholder, NewBW]=individualPhotoChecker(imageArray);
+ [NewTest, centerholder, NewBW]=individualPhotoCheckerGPU(imageArray);
  holder=size(centerholder,1);
  cellPerTime1(timeStamp)=holder;
- ProcessedImageBaseFolderPath=WriteString;
+ ProcessedImageBaseFolderPath='/home/exx/Desktop/Processed Images/';
  ProcessedImageFolderPath=strcat(ProcessedImageBaseFolderPath,RunInfo);
  WriteImages=strcat(ProcessedImageFolderPath,imageletterPhase3);
  WritePath=strcat(WriteImages,'.tiff');
- figure,imshow(NewTestCRAC);
+ 
+ gpuTestCRAC=gather(NewTestCRAC);
  %write phase 2 images
  fprintf(1,'Now Writing %s\n',WritePathCRAC);
- imwrite(NewTestCRAC,WritePathCRAC);
- %imshow(NewTest);
+ imwrite(gpuTestCRAC,WritePathCRAC);
+ 
+ gpuTest=gather(NewTest);
   %write phase 3 images
  fprintf(1,'Now Writing %s\n',WritePath);
- imwrite(NewTest,WritePath);
+ imwrite(gpuTest,WritePath);
  
  %turn phase 2 images to greenscale
  blackImage=zeros(size(NewTestCRAC),'uint16');
@@ -77,7 +77,7 @@ for l = 1:1% length(jpegFiles)
   %write overlayed image
   helperOverlay=int2str(l);
   imageletterOverlay=strcat('EnhancedImageOverlay - ',helperOverlay);
- ProcessedImageBaseFolderPath=WriteString;
+ ProcessedImageBaseFolderPath='/home/exx/Desktop/Processed Images/';
  ProcessedImageFolderPath=strcat(ProcessedImageBaseFolderPath,RunInfo);
  WriteOverlayImages=strcat(ProcessedImageFolderPath,imageletterOverlay);
  WritePathOverlay=strcat(WriteOverlayImages,'.tiff');
@@ -85,7 +85,7 @@ for l = 1:1% length(jpegFiles)
   fprintf(1,'Now Writing %s\n',WritePathOverlay);
  %overlay Image
  hold on;
- imshow(NewTest)
+ imshow(gpuTest)
  hImg=imshow(rgbImage); set (hImg,'AlphaData',0.6);
  hold off;
  f=getframe(gca);

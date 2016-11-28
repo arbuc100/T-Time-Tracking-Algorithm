@@ -162,11 +162,41 @@ end
 % image2=imadjust(image2Preload);
 
 % 
-% figure,imshow(image1, []);title('Slide1 blobs');
-% hold on;
-% plot(cellId(:,1,1),cellId(:,2,1),'r+','MarkerSize',20,'LineWidth',1);
-% text(cellId(:,1,1),cellId(:,2,1),num2str(cellId(:,9,1)),'Color','r');
-% hold off;
+
+ %figure,imshow(imageArray, []);title('Slide1 blobs');
+ %hold on;
+ %plot(cellId(:,1,2),cellId(:,2,2),'r+','MarkerSize',20,'LineWidth',1);
+ %text(cellId(:,1,2),cellId(:,2,2),num2str(cellId(:,9,1)),'Color','r');
+ %hold off;
+filePattern = fullfile(myFolder, 's_C003*.tif');
+jpegFiles = dir(filePattern);
+for l = 1:2%length(jpegFiles)
+  baseFileName = jpegFiles(l).name;
+  fullFileName = fullfile(myFolder, baseFileName);
+  fprintf(1, 'Now reading %s\n', fullFileName);
+  imageArray = imread(fullFileName);
+  [NewTest, centerholder, NewBW]=individualPhotoChecker(imageArray);
+   counter=l;
+ helper=int2str(counter);
+ imshow(NewTest, []);title(counter);
+ hold on;
+ plot(cellId(:,1,l),cellId(:,2,l),'r+','MarkerSize',20,'LineWidth',1);
+ text(cellId(:,1,l),cellId(:,2,l),num2str(cellId(:,9,l)),'Color','r');
+ hold off;
+ im=NewTest;
+ process=strcat('TrackedImageImage',helper);
+ processed=strcat(process,'.tiff');
+ string='/Users/Arbuckle/Desktop/Research/Processed_Images/';
+ WritePath=strcat(string,processed );
+ fprintf(1,'Now writing %s\n',WritePath);
+ hold on;
+ plot(cellId(:,1,l),cellId(:,2,l),'r+','MarkerSize',20,'LineWidth',1);
+ text(cellId(:,1,l),cellId(:,2,l),num2str(cellId(:,9,l)),'Color','r');
+ hold off;
+ f=getframe(gca);
+ im=frame2im(f);
+ imwrite(im,WritePath);
+end 
 % 
 % figure,imshow(image2, []);title('Slide2 blobs');
 % hold on;

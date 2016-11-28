@@ -1,11 +1,11 @@
-function [NewTest, centerholder, NewBW]=individualPhotoChecker(imageArray)
+function [NewTest, centerholder, NewBW]=individualPhotoCheckerGPU(imageArray)
 Slide=imageArray;
 %Slide=imread('/Volumes/CellSlides/14-04-17 - T Cells on ICAM/60x RFP-V5-GCamp6f_01.oif.files/s_C003T102.tif');
 image = imadjust(Slide);
 %[NewTest]=circlemaker(image);
 [NewTest]=image;
 DetectionRound=0;
-[NewTest, centerholder, NewBW]=imageSeperator(NewTest,DetectionRound);
+[NewTest, centerholder, NewBW]=imageSeperatorGPU(NewTest,DetectionRound);
 DetectionRound=DetectionRound+1;
 %[RemovedNoise, resetTracker]= NoiseRemover(centerholder, NewTest);
 loops=1;%length(resetTracker);
@@ -28,5 +28,5 @@ Scrubbed=1;
  %[NewTest, centerholder, NewBW]=imageSeperator(RemovedNoise, DetectionRound);
  
  DetectionRound=DetectionRound+1;
-[NewTest, centerholder, NewBW]=imageSeperator(NewTest,DetectionRound);
+[NewTest, centerholder, NewBW]=imageSeperatorGPU(NewTest,DetectionRound);
 end

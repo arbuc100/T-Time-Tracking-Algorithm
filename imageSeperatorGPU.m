@@ -1,7 +1,7 @@
-function [Newtest, centerholder, NewBW]= imageSeperator(image,counter)
-NewI=zeros(32,32,'uint16');
-Newtest=zeros(512,512,'uint16');
-NewBW=false(512,512,'logical');
+function [Newtest, centerholder, NewBW]= imageSeperatorGPU(image,counter)
+%NewI=zeros(32,32,'uint16');
+%Newtest=zeros(512,512,'uint16');
+%NewBW=false(512,512,'logical');
 checker=1;
 centerholder=zeros(1,7,'double'); 
 j=1;
@@ -13,7 +13,8 @@ for k=0:15
              NewI(x,y)=image(((32*j)+x),((32*k)+y));
             end
         end
-        level=graythresh(NewI);
+        NEWIGPU=gather(NewI);
+        level=graythresh(NEWIGPU);
         if(counter<4)
              if level<0.25
                 level=0.25;
@@ -24,14 +25,14 @@ for k=0:15
              end
             
         end
-        BW=im2bw(NewI,level);
+        BW=im2bw(NEWIGPU,level);
           for e=1:32
             for r=1:32
                  Newtest(((32*j)+e),((32*k)+r))=NewI(e,r);
                  NewBW(((32*j)+e),((32*k)+r))=BW(e,r);
             end
           end 
-        center=regionprops(BW,NewI,'Centroid','Area','Perimeter','MajorAxisLength','MinorAxisLength','Eccentricity','Extent','MaxIntensity','MeanIntensity');
+        center=regionprops(BW,'Centroid','Area','Perimeter','MajorAxisLength','MinorAxisLength','Eccentricity','Extent');
         center.Centroid;
         center.Area;
         center.Perimeter;
@@ -39,8 +40,6 @@ for k=0:15
         center.MinorAxisLength;
         center.Eccentricity;
         center.Extent;
-        center.MaxIntensity;
-        center.MeanIntensity;
         for n=1:length(center)
             if (center(n).Area >=75.0 && center(n).Area<=450) 
             centerholder((checker),1)=((32*k)+center(n).Centroid(:,1));
@@ -52,8 +51,6 @@ for k=0:15
             centerholder((checker),7)=(center(n).MinorAxisLength);
             centerholder((checker),8)=(center(n).Eccentricity);
             centerholder((checker),9)=(center(n).Extent);
-            centerholder((checker),10)=(center(n).MaxIntensity);
-            centerholder((checker),11)=(center(n).MeanIntensity);
             checker=checker+1;
             end 
         end
